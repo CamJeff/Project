@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfume Rankings — Top 5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --accent: #0ea5e9;
+      --accent-weak: #e0f2fe;
+      --sidebar-bg: #f8fafc;
+    }
+
+    html, body { height: 100%; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+      grid-template-areas:
+        "header header"
+        "sidebar main";
+    }
+
+    header {
+      grid-area: header;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .brand { font-weight: 800; }
+    .page-title { text-align: center; font-weight: 600; font-size: clamp(18px, 2.2vw, 22px); }
+
+    nav.sidebar {
+      grid-area: sidebar;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar-bg);
+      padding: 20px 16px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin: 8px 10px 12px;
+    }
+
+    .nav-list { list-style: none; margin: 0; padding: 0; }
+    .nav-item a {
+      display: block;
+      padding: 10px 12px;
+      margin: 6px 4px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid transparent;
+      transition: background 160ms ease, border-color 160ms ease;
+      font-weight: 600;
+      text-align: center;
+    }
+    .nav-item a:hover { background: var(--accent-weak); border-color: var(--accent); }
+    .nav-item a.active { background: var(--accent-weak); border-color: var(--accent); }
+
+    main { grid-area: main; padding: 28px clamp(16px, 4vw, 48px) 64px; max-width: 1000px; }
+    .section { scroll-margin-top: 90px; }
+    .entry { margin-bottom: 36px; }
+    .entry .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .bottle {
+      float: left;
+      width: clamp(160px, 30%, 300px);
+      aspect-ratio: 3 / 4;
+      background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin: 6px 20px 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .clearfix::after { content: ""; display: block; clear: both; }
+
+    .sidebar-toggle { display: none; border: 1px solid var(--border); background: var(--bg); border-radius: 10px; padding: 8px 10px; font-weight: 600; }
+
+    @media (max-width: 960px) {
+      .app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
+      .header-inner { grid-template-columns: 1fr auto 1fr; }
+      nav.sidebar { position: fixed; inset: 64px 0 auto 0; height: auto; max-height: 60vh; border-right: none; border-bottom: 1px solid var(--border); display: none; z-index: 30; }
+      .sidebar-toggle { display: inline-block; }
+      .bottle { width: 40%; }
+    }
+    /* Global styles: h2 link underline animation and vertical centering across all entries */
+  h2 a { color: inherit; text-decoration: none; position: relative; }
+  h2 a::before,
+  h2 a::after {
+    content: "";
+    position: absolute;
+    height: 2px;
+    bottom: -6px;
+    background: currentColor;
+    left: 50%;
+    right: 50%;
+    transition: left 220ms ease, right 220ms ease;
+  }
+  h2:hover a::before,
+  h2:hover a::after,
+  h2 a:focus::before,
+  h2 a:focus::after {
+    left: 0; right: 0;
+  }
+
+  /* Entry layout: image + vertically-centered description */
+  .entry .card { overflow: hidden; }
+  .entry-body { display: flex; align-items: center; gap: 20px; }
+  .entry-body .desc { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+  .entry .bottle { float: none; flex: 0 0 clamp(160px, 30%, 300px); margin: 6px 20px 12px 0; }
+
+  @media (max-width: 960px) {
+    .entry-body { align-items: flex-start; }
+    .entry .bottle { width: 40%; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-inner">
+        <div class="brand"><strong>Rankings</strong></div>
+        <div class="page-title">
+  <a class="title-link" href="../index.html">Perfume Collection Rankings</a>
+</div>
+<link rel="stylesheet" href="../css/style.css">
+        <div style="text-align:right">
+          <button class="sidebar-toggle" aria-expanded="false" aria-controls="sidebar">Entries</button>
+        </div>
+      </div>
+    </header>
+
+    <nav id="sidebar" class="sidebar" aria-label="Perfume navigation">
+      <h2>List Navigation</h2>
+      <ul class="nav-list">
+        <li class="nav-item"><a class="active" href="#rank-20">Number 20</a></li>
+        <li class="nav-item"><a href="#rank-19">Number 19</a></li>
+        <li class="nav-item"><a href="#rank-18">Number 18</a></li>
+        <li class="nav-item"><a href="#rank-17">Number 17</a></li>
+        <li class="nav-item"><a href="#rank-16">Number 16</a></li>
+        <li class="nav-item"><a href="#rank-15">Number 15</a></li>
+        <li class="nav-item"><a href="#rank-14">Number 14</a></li>
+        <li class="nav-item"><a href="#rank-13">Number 13</a></li>
+        <li class="nav-item"><a href="#rank-12">Number 12</a></li>
+        <li class="nav-item"><a href="#rank-11">Number 11</a></li>
+        <li class="nav-item"><a href="#rank-10">Number 10</a></li>
+        <li class="nav-item"><a href="#rank-9">Number 9</a></li>
+        <li class="nav-item"><a href="#rank-8">Number 8</a></li>
+        <li class="nav-item"><a href="#rank-7">Number 7</a></li>
+        <li class="nav-item"><a href="#rank-6">Number 6</a></li>
+        <li class="nav-item"><a href="#rank-5">Number 5</a></li>
+        <li class="nav-item"><a href="#rank-4">Number 4</a></li>
+        <li class="nav-item"><a href="#rank-3">Number 3</a></li>
+        <li class="nav-item"><a href="#rank-2">Number 2</a></li>
+        <li class="nav-item"><a href="#rank-1">Number 1</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section class="section">
+        <h1>Maison Crivelli Perfumes Ranked</h1>
+        <p class="muted">Maison Crivelli is relatively new niche fragrance house founded in France in 2018. They have quickly becomes one of my favourite niche houses recently, particularly due to the clean slick aesthetic and their unique scent DNA. They take risks, many of the releases have been with a creative and sharp point of view. I would describe their overall scent profile as having a calmness and a "pheromonal" quality to it. What I mean by that is there is an indescribable naturalness to it - they are devoid of that alcholic or perfume-y smell that many other fragrances blend into after a while. In contrast, Maison Crivelli smells like how somebody could actually smell naturally, in fact, some people may not even clock that you are wearing a perfume! </p>
+        <p>So I went ahead and sampled every single Maison Crivelli fragrance to date, and will be ranking them from worst to best, and explaining which ones are worth it and which ones aren't. Even the ones that are, they have to be pretty exceptional to persuade me into purchasing a full  bottle, especially because their 100 mL bottles retail from $420 CAD on the 'cheaper' side, all the way to a whopping $840 CAD for some of their extraits! Even on discounters, they can range anywhere from $260 CAD to $350 CAD, the most expensive of which are only available in 50 mL.</p>
+      </section>
+
+      <section id="rank-20" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.fr/parfum/Maison-Crivelli/Ambre-Chromatique-75059.html">20. Ambre Chromatique</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Ambre.png" alt="Ambre bottle" class="bottle" />
+            <div class="desc">
+              <p>Ambre Chromatique is, of course, an amber centric fragrance that opens up with a resinous, sappy type smell. I actually don’t mind the opening too much; it’s rich and tangible, however, this one really loses me in the drydown. It turns very fiery, almost like a strong scented candle, while also being VERY sweet. I guess this description doesn’t sound too bad, but none of it works together in a way that is pleasant and it ends up smelling like an old rich woman’s breath. Like with all Maison Crivelli extraits, the performance on this one is very strong, almost nuclear. Unfortunately that doesn’t do this one any favours, since I felt I was being suffocated.</p>
+              <p><b>Rating: 4/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+     <section id="rank-19" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Patchouli-Magnetik-71759.html">19. Patchouli Magnetik</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Pat.png" alt="Pat bottle" class="bottle" />
+           <div class="desc">
+             <p>Patchouli Magnetik is a very hard one to characterize. It’s slightly spicy, though it has a noticeable round sweetness (maybe from the vanilla)? There is supposed to be a peach note in this; can’t detect it. There is supposed to be a leather note in this; can’t detect it. Above all, I get this very prominent hot, wet, garden or greenhouse feel from this. Nothing overly floral, just a green garden on a hot, humid summer day. Again, this sounds like it would be pleasant, for me this was not. The drydown has this strange milky, creamy (sandalwood?) vibe that again smells like somebody’s breath. Being an extrait, this one also lasts forever unfortunately.</p>
+             <p><b>Rating: 4/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-18" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Rose-SaltifOlia-53868.html">18. Rose Saltifolia</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Rose.png" alt="Rose bottle" class="bottle" />
+           <div class="desc">
+             <p>Rose Saltioflia is a very soft rose that is nestled in a soapy aquatic bath. Gives off a very fresh summer air type vibe near the beach especially. This one feels very Maison Margiela-y, and could fit right in into their Replica line. This one smells absolutely fine, although it’s nothing exceptional for me, and is certainly not worth the expensive price. In addition, the performance on this one is BY FAR the weakest out of any Maison Crivelli perfume I’ve tried. It barely lasts even a couple of hours. It feels like 70% of the perfume is just straight seawater, that is how misty this one is, and how poor the performance is.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+<section id="rank-17" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Osmanthe-Kodoshan-67416.html">17. Osmanthe K&omacr;dosh&amacr;n</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Osman.png" alt="Osman bottle" class="bottle" />
+           <div class="desc">
+             <p>Osmanthe K&omacr;dosh&amacr;n is a pretty bland soft floral fragrance that would be better suited as a body mist. Not even sure what this smells like in particular, just general light and airy florals, I guess. Unfortunately this one is quite shallow and nondescript, this one could genuinely pass for generic hand soap they have at airports. Don’t have much else to say on this one. The performance is decent, but not incredibly strong. There’s a good reason why nobody knows this fragrance exists.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+
+<section id="rank-16" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.fr/parfum/Maison-Crivelli/Absinthe-Boreale-53873.html">16. Absinthe Boréale</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Absin.png" alt="Absin bottle" class="bottle" />
+           <div class="desc">
+             <p>Absinthe Boréale is a clean, herby, fresh, somewhat icy, clean scent, that unfortunately smells exactly like the bathroom cleaner spray that I use. It’s almost the exact same, in fact. It also has a slight chlorine swimming pool smell as well. I guess it’s ok, in spite of the bathroom cleaner reminder, and it certainly doesn’t smell bad, just plain and uninteresting for me. The performance is also on the weaker side, unfortunately.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+<section id="rank-15" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Citrus-Batikanga-56907.html">15. Citrus Batikanga</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Citrus.png" alt="Citrus bottle" class="bottle" />
+           <div class="desc">
+             <p>Citrus Batikanga opens with a heavy dose of cardamom, supported by a blast of chili pepper as well. This one is “gourmand” but not in the sweet way. It smells like someone is making a large pot of soup or stew. Strange, because I don’t get much citrus at all. Also, this one kind has the vibe of an Indian restaurant, or an Indian food market. I guess it smells pleasant enough, but not something I would ever wear.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+<section id="rank-14" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Hibiscus-Mahajad-69069.html">14. Hibiscus Mahaj&aacuted</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Hib.png" alt="Hib bottle" class="bottle" />
+           <div class="desc">
+             <p>Hibiscus Mahajad is one of the brand’s bestsellers, so this is probably a controversial choice positioning it here. This one opens with a loud, peachy rose that is fully enveloped by florals. Can’t detect any of the vanilla, and can barely detect the leather. This one is a very rose/floral forward scent, and unfortunately for me, rose is one of my least favourite notes in perfume. The drydown is definitely better than the opening, as the sharpness of the rose is rounded out a bit, but it is still not a smell that I gravitate towards. This one is also marketed as unisex, but in all honesty leans far more feminine.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+
+     <section id="rank-13" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.fr/parfum/Maison-Crivelli/Fleur-Diamantine-53872.html">13. Fleur Diamantine</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Fleur.avif" alt="Fleur bottle" class="bottle" />
+           <div class="desc">
+             <p>Fleur Diamantine is a clean, simple, linear fragrance that has primarily jasmine and neroli. It has that clean, soapy quality that is common in white florals, and overall smells nice. It’s easy-to-wear, easy to like, although also doesn’t come across as very layered or complex. It’s a simple white floral smell that should be used for simple occasions, and probably not much else. The performance is on the weaker side for Maison Crivelli, but still acceptable.</p>
+             <p><b>Rating: 5.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+
+     <section id="rank-12" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Bois-Datchai-53870.html">12. Bois Datchaï</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Bois.png" alt="Bois bottle" class="bottle" />
+           <div class="desc">
+             <p>Bois Datchaï is a very nice herbal tea, woody type fragrance that has prominent notes of black tea, cedar, with a slight bit of black currant. It’s a very clean and cozy scent, with really polished and washed wood notes that is probably my favourite aspect of this. Some people say this smells like sweat or body odour, and I honestly can’t see that comparison at all, at least on my skin. It’s a smooth and slightly spicy woody fragrance that is versatile with decent performance. The drydown, however, does steer slightly into a curry smell, and that’s where the one loses me a bit. </p>
+             <p><b>Rating: 5.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-11" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Oud-Maracuja-83842.html">11. Oud Maracuj&aacute</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Mara.png" alt="Mara bottle" class="bottle" />
+           <div class="desc">
+             <p>Oud Maracuja is arguably Maison Crivelli’s most well-known and beloved fragrance, winning the best niche perfume in 2024 on Fragrantica. In the opening, I get a very strong rosy and natural dirty oud smell. Definitely one of the more unique rose/oud combinations out there, possibly because it is more of a passion fruit/oud combination. This one is undeniably high quality - it’s well blended, I can easily smell the different notes, and is overall a very dimensional, well-made perfume. It’s just a shame that I am not a fan of both heavy fruity smells, or the smell of natural oud. In the drydown, the fruitiness dissipates, and it is left as a very straightforward natural oud scent, a smell that has been done in plenty of other niche oud perfumes.</p>
+             <p><b>Rating: 6.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-10" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Safran-Secret-104728.html">10. Safran Secret</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Safran.png" alt="Safran bottle" class="bottle" />
+           <div class="desc">
+             <p>Safran Secret smells like dry bark or wood chips, lifted by some spices. It’s quite a simple note breakdown, and pretty much smells linear from start to finish. Despite being an extrait, this one wasn’t too suffocating, in fact, it was quite soft on my skin, although it does last a long time. Quite a straightforward scent, just spicy woods basically. It has a nice naturalness and dryness to it. Nothing much else to say. I liked it.</p>
+             <p><b>Rating: 6.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+          <section id="rank-9" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.fr/parfum/Maison-Crivelli/Cuir-InfraRouge-96781.html">9. Cuir InfraRouge</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Cuir.png" alt="Safran bottle" class="bottle" />
+           <div class="desc">
+             <p>Cuir InfraRouge is a fruity take on leather, somewhat similar to Tom Ford’s Tuscan Leather with the raspberry/leather combination. However, there is also a prominent cinnamon note in the opening, and it dries down to a pretty strong oud base. I had some reservations in the opening; it smelled pretty sweet and medicinal, like one of the sugary drinkable medicines that you give to children. The leather/oud combination also gave a bit of a rubber tire vibe. The drydown was much better, however, rounding out all the sweet screechiness and having a nice, soft leather oud base. Pretty good, except the leather/oud drydown is slightly too dark for my taste.</p>
+             <p><b>Rating: 7/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+    
+      <section id="rank-8" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Lys-Soelaberg-67615.html">8. Lys S&oslashlaberg</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Lys.png" alt="Lys bottle" class="bottle" />
+           <div class="desc">
+             <p>Lys Sølaberg is probably the best example in Maison Crivelli’s catalogue that gives off that “pheromonal” smell I mentioned earlier. It’s a little fruity, and a little soapy upon a first sniff, but as you start to smell it more, the woodsy notes peek through. There is just a very intriguing naturalness to this one - it genuinely does smell like somebody’s actual natural smell! Very weird one to describe, this is one where you have to try it out on your own.</p>
+             <p><b>Rating: 7.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+
+     <section id="rank-7" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.fr/parfum/Maison-Crivelli/Papyrus-Moleculaire-59189.html">7. Papyrus Moléculaire</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Papyrus.png" alt="Papyrus bottle" class="bottle" />
+           <div class="desc">
+             <p>Papyrus Moléculaire is a fresh, rubbery, somewhat clean swimming pool type smell that has soft woods mainly. Very similar softened woody notes in Bois Datchaï, but perhaps a little more light and clean, and devoid of that quality that some would say smell like body odour. It has a very calming naturalness to it, an undeniable uniqueness, and has a freshness that is very difficult to describe. Overall pretty great, decent projection as well.</p>
+             <p><b>Rating: 7.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-6" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.fr/parfum/Maison-Crivelli/Santal-Volcanique-53871.html">6. Santal Volcanique</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Santal.png" alt="Santal bottle" class="bottle" />
+           <div class="desc">
+             <p>Santal Volcanique is, as the title suggests, a sandalwood based fragrance, that ends up smelling quite fresh and clean. This one for me smells exactly like men’s shaving cream, it is nearly identical. As a result, this one also smells incredibly natural and pheromonal, although does lean quite masculine due to the shaving cream likeness. This one is very much a "dad" smell, in that it will probably remind you of your dad even if you don’t have one. I’m sure Bella Ramsay will appreciate this one.</p>
+             <p><b>Rating: 8/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+
+       <section id="rank-5" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Oud-Stallion-83822.html">5. Oud Stallion</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Stallion.png" alt="Stallion bottle" class="bottle" />
+           <div class="desc">
+             <p>Oud Stallion is a heavy and dense leather and natural oud combination, and while I thought I would hate this, it was actually great. It’s thick, but creates such an amazing, warm cloud of leather, nutmeg, and oud. It is certainly a touch animalic, but the cloud it creates around you offers the fragrance in just the right dose, as long as you don’t overspray. It’s bold and impactful, very strong in a small dose, and yet the softness of the scent trail exemplifies the high quality blend on this one.</p>
+             <p><b>Rating: 8/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-4" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Oud-Cadenza-95195.html">4. Oud Cadenza</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Cadenza.png" alt="Cadenza bottle" class="bottle" />
+           <div class="desc">
+             <p>Oud Cadenza is my favourite out of Maison Crivelli’s oud trilogy - possibly because the oud is the least prominent in this one. This one is a very rich, sweet, christmas-y type of scent that has hints of chocolate, cinnamon, and vanilla. The oud is quite subdued and plays more of a supporting role, and as a result I find this one to be very accessible. Great performance as well while also not being too overwhelming. Overall an exceptional smell that has a nice sentimentality to it, reminding me of holidays and winter sweetness. This one also reminds me a lot of Amouage’s Royal Tobacco, although Oud Cadenza is much more mass-appealing, and much easier to wear than Royal Tobacco.</p>
+             <p><b>Rating: 8.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-3" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Iris-Malikhan-62617.html">3. Iris Malikhân</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Iris.png" alt="Iris bottle" class="bottle" />
+           <div class="desc">
+             <p>Iris Malikhân is their powdery iris scent, and being a huge fan of iris in general, this one was very impressive. It’s light, slightly earthy, chocolatey, with a slight hint of smokiness as well. The smokiness reminds me of your grandma’s 15 year old car that she still drives and occasionally has a cheeky little cigarette while driving. And the car has been baking in the hot sun for a little while. Of course, this sounds awful, and although I hate the smell of cigarettes, this description somehow fits so perfectly when talking about the smoky quality in this fragrance. But again, the smokiness is incredibly subtle. Overall this one is pretty incredible. </p>
+             <p><b>Rating: 9/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-2" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Maison-Crivelli/Neroli-Nasimba-79262.html">2. Neroli Nasimba</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Neroli.png" alt="Neroli bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Neroli Nasimba is a white floral leather combination, and although I’m usually hit-or-miss with white floral heavy scents, this one was a definite hit. The leather in this is so clean, prim, and proper, that is the type of leather that reminds you of a new car, or more accurately, a new shoe. Like you went into a shoe store and you're hit with that washed, leathery, new shoe smell. I mean this in the best possible way as well. The neroli and orange blossom works here as well, it creates such a unique blend, and makes this a leather you can even wear during the hot summer. Great, creative, and super long-lasting.
+              </p>
+              <p><b>Rating: 9/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-1" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.fr/parfum/Maison-Crivelli/Tubereuse-Astrale-90733.html">1. Tubéreuse Astrale</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Tuber.png" alt="Tuber bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              This one is shocking to me being placed here. This is because I'm not always a fan of white floral scents, and I am certainly not a fan of tuberose in general (and yet the top 2 scents happen to be white floral). However, this one is definitely an exception; it is a clean white floral scent with a heavy dose of cinnamon. The cinnamon is quite strong throughout, but the drydown you get a a mix of vanilla as well. The white floral is blended in quite softly, with the cinnamon being the most prominent feature in this. This one is sweet, spicy, clean, and fresh, perfectly unisex, perfect projection, and is all around an incredible scent. Highly recommend if you like cinnamon or white floral. Even if you don't like white floral, you may still like this one a lot. Sensational.
+              </p>
+              <p><b>Rating: 9/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.querySelector('.sidebar-toggle');
+    function toggleSidebar() {
+      const isOpen = sidebar.style.display === 'block';
+      sidebar.style.display = isOpen ? 'none' : 'block';
+      toggleBtn.setAttribute('aria-expanded', String(!isOpen));
+    }
+    if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+
+    const links = Array.from(document.querySelectorAll('.nav-item a'));
+    const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const id = '#' + entry.target.id;
+        const link = links.find(a => a.getAttribute('href') === id);
+        if (link && entry.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -45% 0px', threshold: [0, 1] });
+    sections.forEach(sec => observer.observe(sec));
+  </script>
+</body>
+</html>

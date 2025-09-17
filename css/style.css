@@ -1,0 +1,56 @@
+.page-title .title-link {
+  color: inherit;               /* use same text color */
+  text-decoration: none;        /* remove underline */
+  position: relative;
+  display: inline-block;
+  transition: transform 180ms ease; /* for hover enlarge */
+}
+
+/* subtle underline animation (same style as before, optional) */
+.page-title .title-link::before,
+.page-title .title-link::after {
+  content: "";
+  position: absolute;
+  height: 2px;
+  bottom: -6px;
+  background: currentColor;
+  left: 50%;
+  right: 50%;
+  transition: left 220ms ease, right 220ms ease;
+}
+
+/* hover effect: underline + slight enlargement */
+.page-title .title-link:hover::before,
+.page-title .title-link:hover::after,
+.page-title .title-link:focus::before,
+.page-title .title-link:focus::after {
+  left: 0;
+  right: 0;
+}
+
+.page-title .title-link:hover,
+.page-title .title-link:focus {
+  transform: scale(1.05); /* slight enlarge on hover */
+}
+
+
+.thumb {
+  aspect-ratio: 1 / 1;              /* keep square shape */
+  width: 100%;                      /* take full column width */
+  max-width: 220px;                 /* optional max size */
+  background: #f1f5f9;              /* fallback background */
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;                  /* hide image overflow */
+}
+
+/* make images scale down but never distort */
+.thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;              /* keep aspect ratio, no stretching */
+  display: block;
+}

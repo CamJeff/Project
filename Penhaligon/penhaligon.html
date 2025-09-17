@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfume Rankings — Top 5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --accent: #0ea5e9;
+      --accent-weak: #e0f2fe;
+      --sidebar-bg: #f8fafc;
+    }
+
+    html, body { height: 100%; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+      grid-template-areas:
+        "header header"
+        "sidebar main";
+    }
+
+    header {
+      grid-area: header;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .brand { font-weight: 800; }
+    .page-title { text-align: center; font-weight: 600; font-size: clamp(18px, 2.2vw, 22px); }
+
+    nav.sidebar {
+      grid-area: sidebar;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar-bg);
+      padding: 20px 16px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin: 8px 10px 12px;
+    }
+
+    .nav-list { list-style: none; margin: 0; padding: 0; }
+    .nav-item a {
+      display: block;
+      padding: 10px 12px;
+      margin: 6px 4px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid transparent;
+      transition: background 160ms ease, border-color 160ms ease;
+      font-weight: 600;
+      text-align: center;
+    }
+    .nav-item a:hover { background: var(--accent-weak); border-color: var(--accent); }
+    .nav-item a.active { background: var(--accent-weak); border-color: var(--accent); }
+
+    main { grid-area: main; padding: 28px clamp(16px, 4vw, 48px) 64px; max-width: 1000px; }
+    .section { scroll-margin-top: 90px; }
+    .entry { margin-bottom: 36px; }
+    .entry .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .bottle {
+      float: left;
+      width: clamp(160px, 30%, 300px);
+      aspect-ratio: 3 / 4;
+      background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin: 6px 20px 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .clearfix::after { content: ""; display: block; clear: both; }
+
+    .sidebar-toggle { display: none; border: 1px solid var(--border); background: var(--bg); border-radius: 10px; padding: 8px 10px; font-weight: 600; }
+
+    @media (max-width: 960px) {
+      .app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
+      .header-inner { grid-template-columns: 1fr auto 1fr; }
+      nav.sidebar { position: fixed; inset: 64px 0 auto 0; height: auto; max-height: 60vh; border-right: none; border-bottom: 1px solid var(--border); display: none; z-index: 30; }
+      .sidebar-toggle { display: inline-block; }
+      .bottle { width: 40%; }
+    }
+    /* Global styles: h2 link underline animation and vertical centering across all entries */
+  h2 a { color: inherit; text-decoration: none; position: relative; }
+  h2 a::before,
+  h2 a::after {
+    content: "";
+    position: absolute;
+    height: 2px;
+    bottom: -6px;
+    background: currentColor;
+    left: 50%;
+    right: 50%;
+    transition: left 220ms ease, right 220ms ease;
+  }
+  h2:hover a::before,
+  h2:hover a::after,
+  h2 a:focus::before,
+  h2 a:focus::after {
+    left: 0; right: 0;
+  }
+
+  /* Entry layout: image + vertically-centered description */
+  .entry .card { overflow: hidden; }
+  .entry-body { display: flex; align-items: center; gap: 20px; }
+  .entry-body .desc { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+  .entry .bottle { float: none; flex: 0 0 clamp(160px, 30%, 300px); margin: 6px 20px 12px 0; }
+
+  @media (max-width: 960px) {
+    .entry-body { align-items: flex-start; }
+    .entry .bottle { width: 40%; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-inner">
+        <div class="brand"><strong>Rankings</strong></div>
+        <div class="page-title">
+  <a class="title-link" href="../index.html">Perfume Collection Rankings</a>
+</div>
+        <link rel="stylesheet" href="../css/style.css">
+        <div style="text-align:right">
+          <button class="sidebar-toggle" aria-expanded="false" aria-controls="sidebar">Entries</button>
+        </div>
+      </div>
+    </header>
+
+    <nav id="sidebar" class="sidebar" aria-label="Perfume navigation">
+      <h2>List Navigation</h2>
+      <ul class="nav-list">
+        <li class="nav-item"><a class="active" href="#rank-18">Number 18</a></li>
+        <li class="nav-item"><a href="#rank-17">Number 17</a></li>
+        <li class="nav-item"><a href="#rank-16">Number 16</a></li>
+        <li class="nav-item"><a href="#rank-15">Number 15</a></li>
+        <li class="nav-item"><a href="#rank-14">Number 14</a></li>
+        <li class="nav-item"><a href="#rank-13">Number 13</a></li>
+        <li class="nav-item"><a href="#rank-12">Number 12</a></li>
+        <li class="nav-item"><a href="#rank-11">Number 11</a></li>
+        <li class="nav-item"><a href="#rank-10">Number 10</a></li>
+        <li class="nav-item"><a href="#rank-9">Number 9</a></li>
+        <li class="nav-item"><a href="#rank-8">Number 8</a></li>
+        <li class="nav-item"><a href="#rank-7">Number 7</a></li>
+        <li class="nav-item"><a href="#rank-6">Number 6</a></li>
+        <li class="nav-item"><a href="#rank-5">Number 5</a></li>
+        <li class="nav-item"><a href="#rank-4">Number 4</a></li>
+        <li class="nav-item"><a href="#rank-3">Number 3</a></li>
+        <li class="nav-item"><a href="#rank-2">Number 2</a></li>
+        <li class="nav-item"><a href="#rank-1">Number 1</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section class="section">
+        <h1>Penhaligon Portrait Collection Ranked</h1>
+        <p class="muted">Penhaligon is one of the oldest niche perfume houses being founded in 1870 by William Penhaligon, who was originally a barber to Queen Victoria’s court. Over the years, the brand has become known for its eccentric charm and has even earned royal warrants from members of the British royal family. I find their Portrait collection to be their most intriguing offering. Their marketing is particularly effective - they like to personify their fragrances as British aristocrats, and give vivid descriptions to each of their characters. Plus, their bottles are incredibly creative and memorable; being topped with sculpted animal stagheads, almost making them collectible art pieces as well as perfumes. </p>
+        <p>So I went ahead and sample every single Penhaligon Portrait fragrance I could possibly find, and will be ranking them from worst to best, and explaining which ones are worth it and which ones aren't. Even the ones that are, they have to be pretty exceptional to persuade me into purchasing a full  bottle, especially because each 75 mL bottle retails for $460 CAD! Even on discounters, each bottle goes for around $300-$330 CAD. </p>
+        <p>Now of course, I couldn't sample every single fragrance due to some of them being discountinued and hard to sample. In particular, <a href="https://www.fragrantica.com/perfume/Penhaligon-s/Monsieur-Beauregard-46485.html">Monsiuer Beauregard</a>, <a href="https://www.fragrantica.com/perfume/Penhaligon-s/Roaring-Radcliff-43037.html">Roaring Radcliff</a>, and <a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Ruthless-Countess-Dorothea-46484.html">The Ruthless Countess Dorothea</a> I could not sample, and therefore not rank.</p>
+      </section>
+
+      <section id="rank-18" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/Heartless-Helen-55442.html">18. Heartless Helen</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Heartless_Helen.png" alt="Heartless Helen bottle" class="bottle" />
+            <div class="desc">
+              <p>Heartless Helen is a white floral, tuberose based scent marketed for women, and it does indeed lean feminine. White floral is hit or miss for me, but I typically like it to have a drier vibe. This one, however, has a weird creamy note that reminds of cheese. White cheddar cheese. That completely repulsed me from this entire fragrance and left my deeply unsettled. This is the only one that I felt smelled bad.</p>
+              <p><b>Rating: 4/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+     <section id="rank-17" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Ingenue-Cousin-Flora-53876.html">17. The Ingénue Cousin Flora</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Cousin_Flora.png" alt="Cousin Flora bottle" class="bottle" />
+           <div class="desc">
+             <p>The Ingénue Cousin Flora opens with very tangy citrus notes. Like if you were at brunch, and you took a big whiff of the fruit plate. Smells pleasant, but I find citrus heavy fragrances a little uninteresting. This one also loses me in the drydown - it turns into a soapy mess. Can’t really detect any notes in the drydown, it’s just static noise of soap and suds. Again, doesn’t smell bad per se, but not at all my style.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-16" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Uncompromising-Sohan-46503.html">16. The Uncompromising Sohan</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Sohan.png" alt="Sohan bottle" class="bottle" />
+           <div class="desc">
+             <p>The Uncompromising Sohan is a rose/oud fragrance that opens with a juicy wet rose note. Rose is one my least favourite notes in perfume so I didn’t have high expectations. Luckily it does get better as the oud comes in, but even then, this smells like many other rose/oud combinations I’ve tested - such as Guerlain’s Santal Royal, PDM Akaster, or Nishane Favonius. Lowkey they all have the same DNA, and it would be redundant to own this if you already have an oud/rose fragrance. The one nice thing I could say is this has one of the best performances in the portraits collection.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+<section id="rank-15" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Coveted-Duchess-Rose-40714.html">15. The Coveted Duchess Rose</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Duchess.png" alt="Duchess bottle" class="bottle" />
+           <div class="desc">
+             <p>The Coveted Duchess Rose is another rose prominent scent. In the opening I get rose mixed with tangy citrus, probably from the mandarin orange. The rose is this is quite subdued and watery; which I guess is good considering I don’t like rose, but this also means the performance is quite poor. It’s way too misty and light, and barely lasts a few hours on my skin</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-14" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/Much-Ado-About-The-Duke-40713.html">14. Much Ado About the Duke</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Duke.png" alt="Duke bottle" class="bottle" />
+           <div class="desc">
+             <p>Much Ado About the Duke is a masculine rose-based fragrance - although is unisex IMO. The rose is not too annoying in this one, probably because it’s supported by a lot of woodsy notes. I honestly don’t have much to say about this one; it smells fine, but not anything I’m particularly drawn to.</p>
+             <p><b>Rating: 5.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-13" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Revenge-Of-Lady-Blanche-40715.html">13. The Revenge of Lady Blanche</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Blanche.png" alt="Blanche bottle" class="bottle" />
+           <div class="desc">
+             <p>The Revenge of Lady Blanche is a green floral scent that opens with a very photorealistic garden or greenhouse type smell. It’s quite impressive how authentic this smells, and in the drydown the florals soften up and then smells like a fresh summer breeze flowing through a flowerbed. Quite straightforward, and although not my style, I still appreciate the quality in this one. Marketed towards women, and leans pretty feminine. Performance is OK.</p>
+             <p><b>Rating: 6/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-12" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Impudent-Cousin-Matthew-53875.html">12. The Impudent Cousin Matthew</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Matthew.png" alt="Matthew bottle" class="bottle" />
+           <div class="desc">
+             <p>The Impudent Cousin Matthew is a crisp green citrus that opens with a slight dill pickle vibe? It may be the combination of the orange and patchouli, but to my nose it smells like a deep fried pickle. That sounds insulting, but it kind of works here; it’s fresh and a little soapy, and definitely old fashioned. It smells quite mature in that this would be a fragrance I could gift it to my grandfather. In spite of the grandfather vibe, it is completely unisex in my opinion, and is versatile enough to be worn on most occasions. A big drawback, however, which is the case with many of these Penhaligon Portraits, is that the performance is on the weaker side. It’s quite airy and rarefied, and has so-so projection.</p>
+             <p><b>Rating: 6/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+    
+      <section id="rank-11" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Inimitable-William-Penhaligon-63969.html">11. The Inimitable William Penhaligon</a></h2>
+         <div class="entry-body">
+           <img src="Pics/William.png" alt="William bottle" class="bottle" />
+           <div class="desc">
+             <p>The Inimitable William Penhaligon is marketed as a masculine barbershop fougère, and in the opening I get lots of bright citrus. In the drydown, I get straight vetiver. Smells nice, however the opening citrus notes is something you could find in dozens of other designer fragrances that you could get for ⅕ of the price. Even the vetiver drydown you could find done just as well in something like Encre Noire for 1/12 of the price. Not the most creative or inspired scent here. Performance is pretty good, however.</p>
+             <p><b>Rating: 6/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-10" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Tragedy-of-Lord-George-40716.html">10. The Tragedy of Lord George</a></h2>
+         <div class="entry-body">
+           <img src="Pics/George.png" alt="George bottle" class="bottle" />
+           <div class="desc">
+             <p>The Tragedy of Lord George is a woody amber fragrance that opens with lots of wood notes that have a natural “dirtiness” to them. As in, if you were walking in the woods and picked up a piece of bark and smelled it, it would be similar to how this opens. In the drydown, the amber comes into focus, and it’s the kind of amber that has that “play-doh” quality that reminds me of Prada Luna Rossa Black. I don’t mean this as an insult - I love that quality in amber. This one is pretty old-fashioned though; it’s something that a grandad would put on before working a carpentry job or some shit.</p>
+             <p><b>Rating: 7/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     
+
+      <section id="rank-9" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-World-According-to-Arthur-71646.html">9. The World According to Arthur</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Arthur.png" alt="Arthur bottle" class="bottle" />
+           <div class="desc">
+             <p>The World According to Arthur is another amber based fragrance, but this time with lots of vanilla in the opening. The vanilla is a sort of bakery, vanilla-extrait type that smells almost edible. Later on, the amber comes in, but is still nestled in the vanilla. Unlike the Tragedy of Lord George, the amber doesn’t have the “play-doh” smell. This one honestly smells very nice, however the performance (at least on my skin) is absolutely atrocious. It sits close to the skin immediately after applying it, and disappears completely in 3-4 hours. For bottles that retail for $460 CAD, this performance is absolutely and utterly acceptable. Such a shame, because this one does smell great.</p>
+             <p><b>Rating: 7/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-8" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/Mr-Harrod-57190.html">8. The Remarkable Success of Mr. Harrod</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Harrod.png" alt="Harrod bottle" class="bottle" />
+           <div class="desc">
+             <p>The Remarkable Success of Mr. Harrod opens with a very short-lived burst of fruity raspberry, then quickly dries down to a warm cinnamon/tobacco combination. The drydown is quite nice; it’s sweet and wintery, and works as a very cozy, fireplace sort of scent you could wear in the winter. Don’t smell much oud, or much plum either, mainly just a mix of cinnamon and tobacco. The unfortunate part is that this doesn’t project strongly, or last very long. Which is strange, because this is the sort of scent that <i>should</i> be heavy and dense and strong. Still good though, in spite of this</p>
+             <p><b>Rating: 7.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-7" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/Clandestine-Clara-43808.html">7. Clandestine Clara</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Clara.png" alt="Clara bottle" class="bottle" />
+           <div class="desc">
+             <p>Clandestine Clara opens with a boozy note mixed with cinnamon - kind of reminds me of a fireball drink. Was surprised to see this one was marketed for women, because the opening leans quite masculine IMO. However, the drydown gets very powdery, and more feminine leaning. Although I prefer the opening, I still really appreciated how this fragrance ends, as it sort of has a “pheremonal” quality or “naturalness” about it. Performance is also pretty decent too. The powdery drydown does lean slightly into baby powder territory, however.</p>
+             <p><b>Rating: 7.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-6" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/Terrible-Teddy-55441.html">6. Terrible Teddy</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Teddy.png" alt="Teddy bottle" class="bottle" />
+           <div class="desc">
+             <p>Terrible Teddy is a smoky, incense, leather based fragrance. I don’t get much leather from this. This honestly smells exactly like sawdust or wood chips. The kind of sawdust that would be used for landscaping, or on farms for animal bedding. It’s kind of wild how one-to-one identical it is. It has the same pepperiness, and weird freshness as well. I don’t mean this as insult either - I actually love the smell of sawdust. However it leaves me conflicted, because although I love the smell in a vacuum, I’m not sure if I would want to smell like this, or smell this on others. Sawdust is one of those weird, niche smells that humans like for some reason. Like how people love the smell of gasoline, or Sharpies - but I don’t think I would want to smell like gasoline, or Sharpies, or sawdust for that matter. It’s like how the Mona Lisa is a beautiful thing to look at, but somebody doesn’t become more beautiful when they wear a Mona Lisa T-shirt. But still, I appreciate the boldness and bravery of this one. Performance is also above average.</p>
+             <p><b>Rating: 7.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-5" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/Fortuitous-Finley-103514.html">5. Fortuitous Finley</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Finley.png" alt="Finley bottle" class="bottle" />
+           <div class="desc">
+             <p>Fortuitous Finley is their newest release and is marketed as a pistachio/matcha sort of gourmand type fragrance. I wouldn’t call it super gourmand; the opening comes across quite lush and green, whilst the drydown is a very smooth, creamy, sweetness that does have “gourmand” touches, but is also balanced by freshness that is washed over it. Very unique and appealing scent to me, although I didn't get much pistachio or matcha. Performance is quite decent, marketed towards men, but women could also wear this.</p>
+             <p><b>Rating: 8/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-4" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/Changing-Constance-50256.html">4. Changing Constance</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Constance.png" alt="Constance bottle" class="bottle" />
+           <div class="desc">
+             <p>Changing Constance is a sweet gourmand fragrance that has caramel and vanilla, and it does indeed smell like a delicious dessert! It also has a subtle smokiness that reminds me of a crispy dessert pastry. This one is super comforting and inviting, and is one that I feel would appeal to most everyone. The big downside for this is that the performance is below average. It’s quite an intimate fragrance, and lasts for about 4-5 hours. It’s a shame, because this one does smell excellent. This one is marketed for women, and I have no idea why, because this one is absolutely unisex.</p>
+             <p><b>Rating: 8/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-3" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Bewitching-Yasmine-46504.html">3. The Bewitching Yasmine</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Yasmine.png" alt="Yasmine bottle" class="bottle" />
+           <div class="desc">
+             <p>The Bewitching Yasmine is a spicy, vanilla/oud based scent that opens with a blast of cardamom - spicy, raw cardamom. The drydown is where the vanilla comes into the foreground, but you still get lingering spices from the cardamom. This one blew me away! It’s such an intriguing, and unique experience, and is easily the most sentimental portrait scent I tried. It evokes images of autumn festivities - Halloween especially. It’s like you’re walking down an aisle at a Halloween store, and there are deciduous trees with orange leaves falling gently to the ground. IDK if that’s an attractive description, but that’s the vibe I get. Marketed for women, and it honestly is hard for me to categorize. I see both the feminine and masculine qualities in this one, so I guess it’s unisex. The one thing that holds me back from buying a full bottle is that given what a unique point-of-view and how evocative this one is, I’m not sure how versatile it can be. The Halloween vibes are so strong, that I’m unsure if I would wear this elsewhere. The performance is also quite good.</p>
+             <p><b>Rating: 8.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-2" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Blazing-Mr-Sam-50255.html">2. The Blazing Mr. Sam</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Sam.png" alt="Sam bottle" class="bottle" />
+           <div class="desc">
+             <p>The Blazing Mr. Sam is the classic cinnamon tobacco vanilla based fragrance that is marketed towards men, and does lean masculine. This one is bold, impactful, and incredibly well done. I’m not entirely sure how to describe this one, it feels like an experience you have to try out for yourself. Perhaps not an everyday type of scent, as it is quite confident, and has above average performance. The only reason I have not bought a full bottle is because I already have Chopard's Oud Malaki. This one smells pretty much like a one-to-one carbon copy - except this one in fact came out six years before Mr. Sam, and three years before Halfeti (which Mr. Sam is often compared to). Oud Malaki is also 1/4 of the price of Mr. Sam, and honestly, as better performance as well.</p>
+             <p><b>Rating: 9/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-1" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Penhaligon-s/The-Omniscient-Mr-Thompson-84254.html">1. The Omniscient Mr. Thompson</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Thompson.png" alt="Thompson bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              The Omniscient Mr. Thompson is an iris/vanilla based fragrance. Based on this description, I knew I would love it, as iris is one my all-time favourite perfume notes. Plus, I have often heard this being compared to Dior Homme Intense; a fragrance I love a lot. While I see the parallels between this and DHI, there are some noticeable differences. DHI is a bit heavier, and is more of a dry iris and powder vibe, whereas Mr. Thompson is lighter and creamier, probably due to the vanilla. This one is incredible; the vanilla and iris are rendered in some of their best forms. The vanilla is just right; it’s not too sweet or stomachaching, and the iris is just right; it’s not too wet or earthy. They are fine-tuned perfectly and dance together is such an intoxicating way. This one is also extremely versatile IMO - it works on men and women, all year round, day or night, office, date, and more. I would be very surprised to meet someone who said this smelled bad. My only issue is that I wish the performance was better. It’s still respectable, but given how good this smells, and how expensive a full bottle is, I wished it lasted all day. This is only Penhaligon Portrait fragrance that I bought I full bottle of after sampling.
+              </p>
+              <p><b>Rating: 9.5/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.querySelector('.sidebar-toggle');
+    function toggleSidebar() {
+      const isOpen = sidebar.style.display === 'block';
+      sidebar.style.display = isOpen ? 'none' : 'block';
+      toggleBtn.setAttribute('aria-expanded', String(!isOpen));
+    }
+    if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+
+    const links = Array.from(document.querySelectorAll('.nav-item a'));
+    const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const id = '#' + entry.target.id;
+        const link = links.find(a => a.getAttribute('href') === id);
+        if (link && entry.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -45% 0px', threshold: [0, 1] });
+    sections.forEach(sec => observer.observe(sec));
+  </script>
+</body>
+</html>

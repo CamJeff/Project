@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfume Rankings — Top 5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --accent: #0ea5e9;
+      --accent-weak: #e0f2fe;
+      --sidebar-bg: #f8fafc;
+    }
+
+    html, body { height: 100%; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+      grid-template-areas:
+        "header header"
+        "sidebar main";
+    }
+
+    header {
+      grid-area: header;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .brand { font-weight: 800; }
+    .page-title { text-align: center; font-weight: 600; font-size: clamp(18px, 2.2vw, 22px); }
+
+    nav.sidebar {
+      grid-area: sidebar;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar-bg);
+      padding: 20px 16px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin: 8px 10px 12px;
+    }
+
+    .nav-list { list-style: none; margin: 0; padding: 0; }
+    .nav-item a {
+      display: block;
+      padding: 10px 12px;
+      margin: 6px 4px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid transparent;
+      transition: background 160ms ease, border-color 160ms ease;
+      font-weight: 600;
+      text-align: center;
+    }
+    .nav-item a:hover { background: var(--accent-weak); border-color: var(--accent); }
+    .nav-item a.active { background: var(--accent-weak); border-color: var(--accent); }
+
+    main { grid-area: main; padding: 28px clamp(16px, 4vw, 48px) 64px; max-width: 1000px; }
+    .section { scroll-margin-top: 90px; }
+    .entry { margin-bottom: 36px; }
+    .entry .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .bottle {
+      float: left;
+      width: clamp(160px, 30%, 300px);
+      aspect-ratio: 3 / 4;
+      background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin: 6px 20px 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .clearfix::after { content: ""; display: block; clear: both; }
+
+    .sidebar-toggle { display: none; border: 1px solid var(--border); background: var(--bg); border-radius: 10px; padding: 8px 10px; font-weight: 600; }
+
+    @media (max-width: 960px) {
+      .app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
+      .header-inner { grid-template-columns: 1fr auto 1fr; }
+      nav.sidebar { position: fixed; inset: 64px 0 auto 0; height: auto; max-height: 60vh; border-right: none; border-bottom: 1px solid var(--border); display: none; z-index: 30; }
+      .sidebar-toggle { display: inline-block; }
+      .bottle { width: 40%; }
+    }
+    /* Global styles: h2 link underline animation and vertical centering across all entries */
+  h2 a { color: inherit; text-decoration: none; position: relative; }
+  h2 a::before,
+  h2 a::after {
+    content: "";
+    position: absolute;
+    height: 2px;
+    bottom: -6px;
+    background: currentColor;
+    left: 50%;
+    right: 50%;
+    transition: left 220ms ease, right 220ms ease;
+  }
+  h2:hover a::before,
+  h2:hover a::after,
+  h2 a:focus::before,
+  h2 a:focus::after {
+    left: 0; right: 0;
+  }
+
+  /* Entry layout: image + vertically-centered description */
+  .entry .card { overflow: hidden; }
+  .entry-body { display: flex; align-items: center; gap: 20px; }
+  .entry-body .desc { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+  .entry .bottle { float: none; flex: 0 0 clamp(160px, 30%, 300px); margin: 6px 20px 12px 0; }
+
+  @media (max-width: 960px) {
+    .entry-body { align-items: flex-start; }
+    .entry .bottle { width: 40%; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-inner">
+        <div class="brand"><strong>Rankings</strong></div>
+        <div class="page-title">
+  <a class="title-link" href="../index.html">Perfume Collection Rankings</a>
+</div>
+<link rel="stylesheet" href="../css/style.css">
+        <div style="text-align:right">
+          <button class="sidebar-toggle" aria-expanded="false" aria-controls="sidebar">Entries</button>
+        </div>
+      </div>
+    </header>
+
+    <nav id="sidebar" class="sidebar" aria-label="Perfume navigation">
+      <h2>List Navigation</h2>
+      <ul class="nav-list">
+        <li class="nav-item"><a class="active" href="#rank-23">Number 23</a></li>
+        <li class="nav-item"><a href="#rank-22">Number 22</a></li>
+        <li class="nav-item"><a href="#rank-21">Number 21</a></li>
+        <li class="nav-item"><a href="#rank-20">Number 20</a></li>
+        <li class="nav-item"><a href="#rank-19">Number 19</a></li>
+        <li class="nav-item"><a href="#rank-18">Number 18</a></li>
+        <li class="nav-item"><a href="#rank-17">Number 17</a></li>
+        <li class="nav-item"><a href="#rank-16">Number 16</a></li>
+        <li class="nav-item"><a href="#rank-15">Number 15</a></li>
+        <li class="nav-item"><a href="#rank-14">Number 14</a></li>
+        <li class="nav-item"><a href="#rank-13">Number 13</a></li>
+        <li class="nav-item"><a href="#rank-12">Number 12</a></li>
+        <li class="nav-item"><a href="#rank-11">Number 11</a></li>
+        <li class="nav-item"><a href="#rank-10">Number 10</a></li>
+        <li class="nav-item"><a href="#rank-9">Number 9</a></li>
+        <li class="nav-item"><a href="#rank-8">Number 8</a></li>
+        <li class="nav-item"><a href="#rank-7">Number 7</a></li>
+        <li class="nav-item"><a href="#rank-6">Number 6</a></li>
+        <li class="nav-item"><a href="#rank-5">Number 5</a></li>
+        <li class="nav-item"><a href="#rank-4">Number 4</a></li>
+        <li class="nav-item"><a href="#rank-3">Number 3</a></li>
+        <li class="nav-item"><a href="#rank-2">Number 2</a></li>
+        <li class="nav-item"><a href="#rank-1">Number 1</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section class="section">
+        <h1>Nishane Perfumes Ranked</h1>
+        <p class="muted">Nishane was my first experience with niche perfumes, and even after testing from many niches houses in the present moment, Nishane still remains one my absolute favourites. Nishane was founded in Turkey in 2012, I would describe their general perfume DNA as incredibly rich and powerful - I guess this makes sense considering many of their offerings are extrait concentrations - while also having a layered complexity and uniqueness. That's one of my favourite qualities of Nishane, that many of their perfumes smell incredibly original and unlike anything from any brand that I've smelled. However, they still remain quite accessible and they are an easy gateway into niche perfumes.  </p>
+        <p>So I went ahead and sampled (most) of the fragrances offered by Nishane, and will be ranking them from worst to best. To keep this list tidy, I decided not to include any flankers (their X collection), nor some of their less popular, and harder to sample collections, such as their Blossom collection, Extrait de Colognes, or Signature collection. Another thing that I love about Nishane is that they are quite affordable for a niche house. On discounters, you can get a 50 mL for many of their perfumes from around $115 - $150 CAD. The most expensive offerings would be from their Prestige collection: on discounters, a 50 mL bottle would be around $300 CAD - $390 CAD! For reatil, I've seen prices in the range of $800 CAD for fragrances of this collection.</p>
+      </section>
+
+      <section id="rank-23" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Unutamam-54787.html">23. Unutamam</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Unut.png" alt="Unut bottle" class="bottle" />
+            <div class="desc">
+              <p>Unutamam is heavy and smoky, dirty and animalic, with a weird gasoline smell? Smells like a truck driver after a 24 hour shift. This one contains a castoreum note, which is a yellowish, sticky substance that is secreted from anal glands of beavers that are used to ‘mark territory’. That about sums up how this one smells. I can’t believe somebody in history decided to smell sticky goo from a beaver’s ass and thought “this should be bottled in perfumes and sold for hundreds.” I’m scared of anybody who owns this fragrance and wears it regularly.</p>
+              <p><b>Rating: 3/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-22" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Favonius-70388.html">22. Favonius</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Fav.png" alt="Fav bottle" class="bottle" />
+            <div class="desc">
+              <p>Favonius is a heavy, heavy rose centered scent with oud as well. The rose in this is so overpowering, and so strong and potent, I was tempted to scrub it off. But when I did, I could still smell it clearly, because the performance on this is incredibly strong. This honesty smells like any other basic niche oud/rose combo, but this one is made worse by the fact that the rose is screechy and overpowering.</p>
+              <p><b>Rating: 4/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+     <section id="rank-21" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Karagoz-44176.html">21. Karagoz</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Kara.png" alt="Kara bottle" class="bottle" />
+           <div class="desc">
+             <p>Karagoz is a masculine, grape heavy fragrance that also has quite a smoky, ashy edge to it as well. The grape in this is very prominent, and luckily doesn’t come across as medicinal because it is made to be so dirty smelling. The dirtiness probably comes from the oud base, and honestly makes for an incredibly strange smelling perfume. It isn’t very pleasant - it’s heavy and charred and again, dirty. This smells like someone threw grapes onto a gas bbq and scorched them, while also sprinkling some black charcoal dust on it as well.</p>
+             <p><b>Rating: 4/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-20" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Shem-66277.html">20. Shem</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Shem.png" alt="Shem bottle" class="bottle" />
+           <div class="desc">
+             <p>Shem features a loud as fuck rose with some aromatic touches. Being a professional rose-hater, I knew this one would be a miss for me. Especially within the prestige collection of Nishane, the general theme is making the perfumes as heavy, dense, and pungent as possible. This one fits right in - it’s thick and everlasting, and doesn’t smell good enough to welcome any of that strong performance. There is also some leather in the drydown, which I guess is nice, but it never steals the spotlight from the rose, which is not so nice.</p>
+             <p><b>Rating: 4/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+<section id="rank-19" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Nanshe-64093.html">19. Nanshe</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Nanshe.png" alt="Nanshe bottle" class="bottle" />
+           <div class="desc">
+             <p>Nanshe is a powdery floral scent that in fact, opened to be quite soft and pleasant. But that quickly went away, and all I was left with was an incredibly soapy smell. Like, an insane amount of soap, and a chemical sort of soap smell. If you ever accidentally tasted soap, this is how this one smells. It’s also so strong, to the point where I genuinely hurt a part of my brain when I inhaled this one too sharply. It’s strong, it’s chemical-y, it made my stomach queasy and my brain hurt. At least the opening was somewhat alright.</p>
+             <p><b>Rating: 4.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-18" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Mana-72701.html">18. Mana</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Mana.png" alt="Mana bottle" class="bottle" />
+           <div class="desc">
+             <p>Mana is a super rich, uncleaned, barnyard, cowboy leather/suede smell, and that’s pretty much all I get. If you like raw “send her to the ranch” type leather, this one may be for you. This would be a lot better if they cleaned it up a bit, and perhaps tone down the intensity of the performance. The projection is enveloping and will suffocate you and others if you overspray this (which would honestly be more than one single spray). I can see a version of this where I actually really like, but the griminess and natural raw edge that this one has makes it nearly unwearable for me personally, and for most people in most situations as well.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+     <section id="rank-17" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Wulong-Cha-30567.html">17. Wulóng Chá</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Cha.png" alt="Cha bottle" class="bottle" />
+           <div class="desc">
+             <p>Wulóng Chá smells exactly how the title sounds; it opens with a lemony sort of watery tea vibe. Despite the lightness in the scent profile, it actually has good performance - which is pretty standard for Nishane. This one, although it does smell pleasant, feels way too one-dimensional, and “body-misty” for me. I’m not generally a fan of citrus, and anything that can be drunk as tea, so this one stirred almost no reaction from me other than “this is nice, I guess”. This one is quite inoffensive, however, and could work in almost any situation, so that is nice, I guess.</p>
+             <p><b>Rating: 5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+          <section id="rank-16" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Vain-Naive-49215.html">16. Vain & Naïve</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Vain.png" alt="Vain bottle" class="bottle" />
+           <div class="desc">
+             <p>Vain & Naïve is a pretty decent bright citrus/floral combination that comes across pretty high quality. The opening certainly has tangible lemon and raspberry notes, with hints of floral as well. The drydown turns into a soup of perfume-y smell. Just a general homogenous “sweet” or “fresh” or “floral” smell that happens when you test too many perfumes and they start to mix and blend together. It’s almost like you walked into a crowded Sephora shop and went straight to the cologne section. And yet, it lowkey still smells good. Nothing incredible, however.</p>
+             <p><b>Rating: 6/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-15" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Zenne-44175.html">15. Zenne</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Zenne.png" alt="Zenne bottle" class="bottle" />
+           <div class="desc">
+             <p>Zenne is a fruity vanilla combination that opens with some zingy fruit notes, containing black currant and rhubarb. The vanilla comes more into focus in the drydown, and creates quite a sweet profile. This one smells perfectly alright and inoffensive, somewhat of a mass-appealing designer vibe that leans more feminine. Definitely pleasant and easy to wear, but not the most exciting nor unique offering from the brand.</p>
+             <p><b>Rating: 6/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+    
+      <section id="rank-14" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Hacivat-44174.html">14. Hacivat</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Hacivat.png" alt="Hacivat bottle" class="bottle" />
+           <div class="desc">
+             <p>Hacivat is one where I have a complicated relationship with. At first, I loved its alternative, more unique Creed Aventus DNA that had a more mossy, earthy feeling in the drydown. However, as I have smelled this one more and more, I can’t quite get over the sharp metallic note that this one has in the opening, and overall leans a little too mossy or earthy for my liking. For me, it doesn’t come across as formal or refined, in fact, it’s not clean or round at all, it’s sharp metal and damp natural moss. I’ve come to realize that Aventus is much more my style, and this one is perhaps a little too alternative.</p>
+             <p><b>Rating: 6/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-13" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/EGE-AIGAIO-64092.html">13. EGE/ΑΙΓΑΙΟ</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Ege.png" alt="Ege bottle" class="bottle" />
+           <div class="desc">
+             <p>Ege/ΑΙΓΑΙΟ opens with a sprawling, dense, green overload. It’s rich, and tangible, and evocative, and one of the most transportive green openings I have ever smelled. It’s wild how photorealistic they captured a lush hydrated forest, and is overall a very impressive opening. However, this fragrance quickly loses its detail, as the drydown turns into static noise of green soapiness, and leans more and more feminine in the process. Very disappointing finish into a nondescript handsoap type of smell given how elaborate and specific the opening was.</p>
+             <p><b>Rating: 6.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-12" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Deziro-93684.html">12. Deziro</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Deziro.png" alt="Deziro bottle" class="bottle" />
+           <div class="desc">
+             <p>Deziro is a bright, summery, citrus/green perfume with a slight marine edge. Quite a powerful fragrance for a freshie, and can easily be too overwhelming if oversprayed. This one has often been titled as a niche version of the classic Bleu de Chanel, and while I see the comparison, Deziro is much sharper and slightly more challenging. The profile is denser and the citrus seem quite juicy and they kind of wash together. An overall nice smell, albeit quite simplistic and familiar.</p>
+             <p><b>Rating: 6.5/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-11" class="section entry">
+       <div class="card clearfix">
+         <h2><a href="https://www.fragrantica.com/perfume/Nishane/Papilefiko-74667.html">11. Papilefiko</a></h2>
+         <div class="entry-body">
+           <img src="Pics/Pap.png" alt="Pap bottle" class="bottle" />
+           <div class="desc">
+             <p>Papilefiko is a cardamom based, lavender wrapped, balsamic fragrance that is actually quite good. It’s a little hard to describe, it’s slightly sweet with some touches of spices, with a nice resinous backdrop. This one reminds me a lot of Penhaligon’s Blazing Mr. Sam, they are definitely in the same family. Papilefiko is like Mr. Sam’s younger brother who hasn’t gone through puberty yet. What I mean by that is that it has the same vibe as Mr. Sam, yet this one is toned down, softer, and overall more homogenous and rounded out.</p>
+             <p><b>Rating: 7/10</b></p>
+           </div>
+         </div>
+       </div>
+     </section>
+
+      <section id="rank-10" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Tero-74669.html">10. Tero</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Tero.png" alt="Tero bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Tero is a very nice, heavy caramel based fragrance that opens immediately with a strong sugary sweetness from the salted caramel. It is also supported with peppery spices to create quite a unique spicy gourmand fragrance. Very well made, well blended, and well performing, and is easy to throw on in nearly every situation. Caramel is not my favourite smell ever, but I can absolutely appreciate the quality of this one.
+              </p>
+              <p><b>Rating: 7/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-9" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Ambra-Calabria-30568.html">9. Ambra Calabria</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Ambra.png" alt="Ambra bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Ambra Calabria has one the biggest twists out of any fragrance I’ve tried. It opens with  bright green citruses that gives the vibe of a nice summery breeze. The opening  is certainly pleasant, but nothing I would be particularly drawn to. However, in the drydown, it does essentially a complete 180, and turns into a very rich, powdery amber vanilla combination. It’s crazy how this one transforms on the skin and how starkly different the opening and drydown smell. I certainly prefer the drydown on this one, and wish it lasted it a bit longer. This is one of the few Nishane offerings that have one of the worst performances from the brand.
+              </p>
+              <p><b>Rating: 7.5/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-8" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/B-612-49214.html">8. B-612</a></h2>
+          <div class="entry-body">
+            <img src="Pics/B-612.png" alt="B-612 bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              B-612 is a very classy, masculine, fougere type fragrance that opens with a pretty realistic coniferous tree type of smell. The drydown is a musky woody base that gives the vibe of one of those classic “gentlemenly” barbershops that you go to, where all the barbers have tattoos and piercings. It’s impactful while simultaneously being quite gentle, and has quite the dose of lavender as well. A very niche beginner friendly fragrance as well, as it is quite mass-appealing and versatile as well.
+              </p>
+              <p><b>Rating: 8/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-7" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Hundred-Silent-Ways-37602.html">7. Hundred Silent Ways</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Silent.png" alt="Silent bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Hundred Silent Ways is an incredible light white floral vanilla that opens with softened peach and orange notes. The drydown is vanillic and woody and comforting, and very high quality vanilla as well. The vanilla is slightly gourmand as well, reminding me of a fluffy vanilla cake with icing. This one leans more feminine, but I’d argue this can be worn by men too. Quite versatile, quite accessible, and perfect for almost any situation.
+              </p>
+              <p><b>Rating: 8/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-6" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Tempfluo-74668.html">6. Tempfluo</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Tempfluo.png" alt="Tempfluo bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Templfluo is a citrus/white floral centric scent, leaning way more into white floral territory than anything. Being a little indecisive on whether I like white floral in general, this one is certainly a fragrance that pushes me into the ‘yes’ category. This one for me smells like an extremely high quality, luxury sunscreen - it’s squeaky clean and florally rich. It has leathery touches, and a good dose of saffron too. It’s warm, creamy, smooth, and incredibly well done.
+              </p>
+              <p><b>Rating: 8/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-5" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Sultan-Vetiver-30574.html">5. Sultan Vetiver</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Sultan.png" alt="Sultan bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Sultan Vetiver is a sharp, bold, vetiver bomb that somehow contains four different types of vetiver? I wouldn’t say I’m usually the biggest fan of vetiver, but this one is crazy good. It’s super realistic and incredibly unique with a singular point of view. It has a smokiness too, and a strange, but interesting dusty chocolate type of smell. Despite having mainly vetiver, this one is quite complex, and easily one of the most memorable fragrances I’ve smelled. Great performance, excellent creativity, and imbued with so much personality.
+              </p>
+              <p><b>Rating: 9/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-4" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Fan-Your-Flames-37603.html">4. Fan Your Flames</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Fan.png" alt="Fan bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Fan your Flames is one of the most unique Nishane fragrances I’ve tried, and really one the most unique fragrances I’ve tried, ever. It opens to be quite sweet, boozy, and has a slight chlorine swimming pool smell. Perhaps I’m rating it highly because this smell is incredibly sentimental to me - it smells quite similar to a chocolate/candy shop in LA when my family would take vacations, bringing back those memories. I highly appreciate the creativity on this one, even if I wouldn’t wear this one personally.
+              </p>
+              <p><b>Rating: 9/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-3" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Kredo-74670.html">3. Kredo</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Kredo.png" alt="Kredo bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Kredo is Nishane’s take on the Oud Wood DNA, from a gateway niche perspective. In that, I mean that the oud is clean enough to be mass-appealing, but also slightly “funky” or animalic  to have that niche edge. This one is a fantastic clean spicy oud fragrance that has notes of cardamom and suede that are quite noticeable as well. It’s very rich and well made, and, unlike Oud Wood, has great performance.
+              </p>
+              <p><b>Rating: 9/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-2" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Nefs-54786.html">2. Nefs</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Nefs.png" alt="Nefs bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Nefs is an incredibly dimensional, complex fragrance with many notes listed, and it definitely embodies the prestige quality as is titled in the collection this belongs to. At first the fragrance was very loud and sharp and I was worried about smelling it more. But once it settles down, it turns into a really compelling woody, leathery, cinnamon forward fragrance. In the opening, you get lots of honey, saffron, and a noticeable boozy element as well, and it’s pretty impressive how for a fragrance with so many notes, you are able to smell hints of all of them. Very layered and one-of-a-kind fragrance, and although this is not a perfume I would reach for on most days, I can still appreciate the quality and creativity.
+              </p>
+              <p><b>Rating: 9/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rank-1" class="section entry">
+        <div class="card clearfix">
+          <h2><a href="https://www.fragrantica.com/perfume/Nishane/Ani-54785.html">1. Ani</a></h2>
+          <div class="entry-body">
+            <img src="Pics/Ani.png" alt="Ani bottle" class="bottle" />
+            <div class="desc">
+              <p>
+              Ani is the absolute GOAT of Nishane, and for very good reason. This is a beautiful powdery vanilla that isn’t too sweet or overwhelming. Despite it being vanilla forward, it is not really a gourmand, as it's supported by sandalwood and musk (is what I can smell mainly). It’s hard to put a masterpiece like this into words, you really just have to smell it for yourself. Creamy vanilla in one of the best forms I have ever smelled. Perfect for anywhere and everywhere, and for anyone. If someone says this smells bad, they are a dirty liar.
+              </p>
+              <p><b>Rating: 10/10</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.querySelector('.sidebar-toggle');
+    function toggleSidebar() {
+      const isOpen = sidebar.style.display === 'block';
+      sidebar.style.display = isOpen ? 'none' : 'block';
+      toggleBtn.setAttribute('aria-expanded', String(!isOpen));
+    }
+    if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+
+    const links = Array.from(document.querySelectorAll('.nav-item a'));
+    const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const id = '#' + entry.target.id;
+        const link = links.find(a => a.getAttribute('href') === id);
+        if (link && entry.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -45% 0px', threshold: [0, 1] });
+    sections.forEach(sec => observer.observe(sec));
+  </script>
+</body>
+</html>
